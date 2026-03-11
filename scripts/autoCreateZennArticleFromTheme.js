@@ -8,9 +8,9 @@ import { ZennAIContentGenerator, buildZennArticleMarkdown } from "@aa-0921/zenn-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Zenn の GitHub 連携リポジトリとして、このスクリプトと同じリポジトリルートを使う
 function resolveZennRepoPath() {
-  const envPath = process.env.ZENN_REPO_PATH || "./zenn-repo";
-  return path.resolve(__dirname, "..", envPath);
+  return path.resolve(__dirname, "..");
 }
 
 function ensureArticlesDir(zennRepoPath) {
@@ -40,6 +40,18 @@ function runGitCommand(cwd, command, args) {
 }
 
 async function main() {
+  // OpenRouter APIキーの存在チェックと余計な空白除去
+  let apiKey = process.env.OPENROUTER_API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error("OPENROUTER_API_KEY を設定してください（.env または環境変数）");
+  }
+  process.env.OPENROUTER_API_KEY = apiKey;
+  const keyPreview =
+    apiKey.length >= 6 ? `${apiKey.slice(0, 4)}...${apiKey.slice(-2)}` : "(短すぎ)";
+  console.log(
+    `[DEBUG] OPENROUTER_API_KEY: 設定済み 長さ=${apiKey.length} プレビュー=${keyPreview}`
+  );
+
   const zennRepoPath = resolveZennRepoPath();
 
   if (!fs.existsSync(zennRepoPath)) {
