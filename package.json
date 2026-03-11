@@ -1,0 +1,27 @@
+{
+  "name": "zenn-auto-first",
+  "version": "0.1.0",
+  "description": "特定のZennアカウント向けに、自動記事生成・投稿を行うスクリプト群。",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "create:zenn-article": "node scripts/autoCreateZennArticleFromTheme.js"
+  },
+  "keywords": [
+    "zenn",
+    "automation",
+    "articles",
+    "ai"
+  ],
+  "author": "aa-0921",
+  "license": "MIT",
+  "dependencies": {
+    "@aa-0921/zenn-auto-core": "file:../zenn-auto-core",
+    "cross-fetch": "^4.0.0",
+    "dotenv": "^16.4.5",
+    "zenn-cli": "^0.1.153"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
