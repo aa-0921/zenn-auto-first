@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { ZennAIContentGenerator, buildZennArticleMarkdown } from "@aa-0921/zenn-auto-core";
-import { ZENN_ARTICLE_THEMES, pickRandomTheme } from "../config/zennArticleThemes.js";
+import { pickRandomTheme } from "../config/zennArticleThemes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,7 +73,7 @@ async function main() {
   // 2. テーマから AI で記事生成（駆け出し向けテーマ配列からランダムに 1 件取得）
   const defaultDetail =
     "駆け出しエンジニアが理解しやすいよう、具体例ベースで解説してください。";
-  const picked = pickRandomTheme(ZENN_ARTICLE_THEMES);
+  const picked = pickRandomTheme();
   const theme = picked.theme;
   const detail = picked.detail ?? defaultDetail;
   console.log("[INFO] テーマをランダムに選択しました:", theme);

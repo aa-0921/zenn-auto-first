@@ -86,10 +86,10 @@ export const ZENN_ARTICLE_THEMES = [
 
 /**
  * 配列からランダムに 1 件選ぶ（qiita-auto-core の pickRandom と同様）
- * @param {Array<{ theme: string, detail?: string }>} themes
+ * @param {Array<{ theme: string, detail?: string }>} [themes=ZENN_ARTICLE_THEMES] - 対象配列（省略時は ZENN_ARTICLE_THEMES）
  * @returns {{ theme: string, detail?: string }}
  */
-export function pickRandomTheme(themes) {
+export function pickRandomTheme(themes = ZENN_ARTICLE_THEMES) {
   if (!Array.isArray(themes) || themes.length === 0) {
     throw new Error("pickRandomTheme: テーマ配列が空です");
   }
