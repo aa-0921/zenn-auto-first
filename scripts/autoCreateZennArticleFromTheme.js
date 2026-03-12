@@ -116,6 +116,7 @@ async function main() {
   } catch (err) {
     console.error("[ERROR] git add/commit/push のいずれかで失敗しました。手動で確認してください。");
     console.error(err.message);
+    process.exit(1);
   }
 }
 
