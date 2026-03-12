@@ -1,0 +1,51 @@
+# Zenn 向けに AI 記事を生成し、同一リポジトリの articles/ に追加して push する
+# 一日2回実行（JST 9:00, 21:00 頃）
+# 手動実行: Actions タブから "Auto Create Zenn Article" の Run workflow
+
+name: Auto Create Zenn Article
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'  # 0:00, 12:00 UTC ≒ JST 9:00, 21:00
+  workflow_dispatch:
+
+permissions:
+  contents: write  # 記事追加後の git push に必要
+
+jobs:
+  auto-create-zenn-article:
+    runs-on: ubuntu-latest
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      ZENN_PUBLISHED: 'true'
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: zenn-auto-core をチェックアウト
+        uses: actions/checkout@v4
+        with:
+          repository: aa-0921/zenn-auto-core
+          path: zenn-auto-core
+          ref: main
+          token: ${{ secrets.CORE_REPO_TOKEN }}
+
+      - name: Node.js をセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: 依存パッケージをインストール
+        run: |
+          cd zenn-auto-core && npm install
+          cd ..
+          sed -i 's|file:../zenn-auto-core|file:./zenn-auto-core|' package.json
+          npm install
+
+      - name: Git 設定（コミット用）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: 記事生成・投稿スクリプトを実行
+        run: node scripts/autoCreateZennArticleFromTheme.js
