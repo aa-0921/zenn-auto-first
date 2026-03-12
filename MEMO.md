@@ -20,4 +20,3 @@ node scripts/autoCreateZennArticleFromTheme.js
 |-----------|------|
 | `OPENROUTER_API_KEY` | OpenRouter API キー（記事生成に必須） |
 | `CORE_REPO_TOKEN` | private リポジトリ `aa-0921/zenn-auto-core` を checkout するための Personal Access Token（repo スコープ） |
-
