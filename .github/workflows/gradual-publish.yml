@@ -1,0 +1,40 @@
+# published: false の記事を1日1記事ずつ公開する
+# ファイル名の昇順（古い順）で1件ずつ published: true に変更してpushする
+# 毎日 JST 10:00 に実行（UTC 1:00）
+
+name: Gradual Publish
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  gradual-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Git 設定
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+      - name: published:false の記事を1件だけ公開してpush
+        run: |
+          # ファイル名昇順で published: false の記事を1件取得
+          TARGET=$(grep -rl '^published: false' articles/ | sort | head -n 1)
+          if [ -z "$TARGET" ]; then
+            echo "公開待ち記事はありません。スキップします。"
+            exit 0
+          fi
+          echo "公開対象: $TARGET"
+          sed -i "s/^published: false$/published: true/" "$TARGET"
+          git add "$TARGET"
+          git commit -m "publish: $TARGET"
+          git push
