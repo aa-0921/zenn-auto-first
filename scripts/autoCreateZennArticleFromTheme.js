@@ -9,6 +9,24 @@ import { pickRandomTheme } from "../config/zennArticleThemes.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// 記事末尾に追記する紹介セクション（Qiita と同様）
+const ARTICLE_INTRO_SECTION = `
+✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨
+
+https://unityroom.com/games/nyampire_survivors
+
+「ニャンパイアサバイバー」というヴァンパイアサバイバーリスペクトのゲームを作成しました！
+もしよろしければ遊んで頂けると嬉しいです😭
+
+✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨
+
+習い事教室の先生向けに、SNS 投稿・生徒募集・保護者通知の文章を AI で生成する Web サービス「おしらせAI」を個人開発しました。Next.js + Supabase + LLM で構成しており、無料で月 10 回まで試用できます。よければ触ってみてください。
+
+→ おしらせAI: https://oshirase-ai.vercel.app/
+
+✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨
+`.trim();
+
 // Zenn の GitHub 連携リポジトリとして、このスクリプトと同じリポジトリルートを使う
 function resolveZennRepoPath() {
   return path.resolve(__dirname, "..");
@@ -84,13 +102,14 @@ async function main() {
     theme,
     detail
   });
+  const bodyWithIntroSection = `${body.trimEnd()}\n\n${ARTICLE_INTRO_SECTION}`;
 
   const publishedEnv = process.env.ZENN_PUBLISHED;
   const published =
     publishedEnv == null ? true : String(publishedEnv).toLowerCase() === "true";
   const markdown = buildZennArticleMarkdown({
     title,
-    body,
+    body: bodyWithIntroSection,
     topics,
     emoji: "📝",
     published
