@@ -18,7 +18,7 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'  # Node 20 非推奨対応（2026年6月以降の既定に先行対応）
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      ZENN_PUBLISHED: 'true'
+      ZENN_PUBLISHED: 'false'
     steps:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v4
