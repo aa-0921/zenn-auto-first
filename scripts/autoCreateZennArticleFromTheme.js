@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { ZennAIContentGenerator, buildZennArticleMarkdown } from "@aa-0921/zenn-auto-core";
+import { ZennAIContentGenerator, buildZennArticleMarkdown, validateZennMarkdown } from "@aa-0921/zenn-auto-core";
 import { pickRandomTheme } from "../config/zennArticleThemes.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -118,6 +118,15 @@ async function main() {
   const articlesDir = ensureArticlesDir(zennRepoPath);
   const filename = buildArticleFilename();
   const filePath = path.join(articlesDir, filename);
+
+  // FrontMatter の構造を検証してから書き込む（混入バグを早期検出）
+  try {
+    validateZennMarkdown(markdown);
+  } catch (err) {
+    console.error(`[ERROR] 生成した Markdown の FrontMatter が不正です: ${err.message}`);
+    console.error("[ERROR] ファイルの書き込みを中断しました。生成内容を確認してください。");
+    process.exit(1);
+  }
 
   fs.writeFileSync(filePath, markdown, "utf8");
 
