@@ -9,8 +9,13 @@ import { pickRandomTheme } from "../config/zennArticleThemes.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 記事末尾に追記する紹介セクション（Qiita と同様）
-const ARTICLE_INTRO_SECTION = `
+// 2つ目の見出し直前（または末尾）に挿入する自己紹介・宣伝ブロック
+const ARTICLE_PROMOTION_BLOCK = `
+https://www.crazygames.com/game/drop-defense
+
+スイカゲームとにゃんこ大戦争のようなタワーディフェンス系ゲームを組み合わせたゲームを作成しました！
+遊んでみていただけると嬉しいです🙇‍♂️
+
 ✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨
 
 海外テックニュースを追いたいけど、英語や情報量の多さで大変…という方向けに、
@@ -68,6 +73,24 @@ function runGitCommand(cwd, command, args) {
   });
 }
 
+function insertFooterBeforeSecondHeading(body, footer) {
+  const lines = body.split("\n");
+  let headingCount = 0;
+
+  for (let i = 0; i < lines.length; i += 1) {
+    if (/^#/.test(lines[i])) {
+      headingCount += 1;
+      if (headingCount === 2) {
+        const before = lines.slice(0, i).join("\n").trimEnd();
+        const after = lines.slice(i).join("\n").trimStart();
+        return `${before}\n\n${footer}\n\n${after}`.trim();
+      }
+    }
+  }
+
+  return `${body.trimEnd()}\n\n${footer}`;
+}
+
 async function main() {
   // OpenRouter APIキーの存在チェックと余計な空白除去
   let apiKey = process.env.OPENROUTER_API_KEY?.trim();
@@ -112,14 +135,14 @@ async function main() {
     theme,
     detail
   });
-  const bodyWithIntroSection = `${body.trimEnd()}\n\n${ARTICLE_INTRO_SECTION}`;
+  const bodyWithPromotionBlock = insertFooterBeforeSecondHeading(body, ARTICLE_PROMOTION_BLOCK);
 
   const publishedEnv = process.env.ZENN_PUBLISHED;
   const published =
     publishedEnv == null ? true : String(publishedEnv).toLowerCase() === "true";
   const markdown = buildZennArticleMarkdown({
     title,
-    body: bodyWithIntroSection,
+    body: bodyWithPromotionBlock,
     topics,
     emoji: "📝",
     published
