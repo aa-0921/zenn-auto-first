@@ -13,11 +13,10 @@ const __dirname = path.dirname(__filename);
 const ARTICLE_PROMOTION_BLOCK = `
 ✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨
 
+https://www.youtube.com/@tech-trend-zunda-metan/featured
 
-https://www.crazygames.com/game/drop-defense
-
-スイカゲームとにゃんこ大戦争のようなタワーディフェンス系ゲームを組み合わせたゲームを作成しました！
-遊んでみていただけると嬉しいです🙇‍♂️
+最新ツール・トレンド情報をずんだもん×めたんが解説するYouTubeチャンネルを運営しています！
+いいね、チャンネル登録してもらえると嬉しいです🙇‍♂️
 
 ---
 
