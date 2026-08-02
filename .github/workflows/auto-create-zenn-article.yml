@@ -1,13 +1,25 @@
 # Zenn 向けに AI 記事を生成し、同一リポジトリの articles/ に追加して push する
-# 一日2回実行（JST 9:00, 21:00 頃）
+# 一日1回実行（JST 9:00 頃）
 # 手動実行: Actions タブから "Auto Create Zenn Article" の Run workflow
 
 name: Auto Create Zenn Article
 
 on:
   schedule:
-    - cron: '0 */12 * * *'  # 0:00, 12:00 UTC ≒ JST 9:00, 21:00
+    # 生成は 1 日 1 件にする。gradual-publish.yml が 1 日 1 件しか公開しないため、
+    # 1 日 2 件生成していた頃は未公開記事が毎日 1 件ずつ溜まり続けていた（2026/08 時点で 92 件）。
+    - cron: '0 0 * * *'  # 0:00 UTC ≒ JST 9:00
   workflow_dispatch:
+    inputs:
+      article_type:
+        description: '記事タイプ（動作確認用。random は通常どおり比率でランダム選択）'
+        type: choice
+        required: false
+        default: random
+        options:
+          - random
+          - listicle
+          - theme
 
 permissions:
   contents: write  # 記事追加後の git push に必要
@@ -50,4 +62,7 @@ jobs:
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
 
       - name: 記事生成・投稿スクリプトを実行
+        # 手動実行で記事タイプを指定できるようにする（schedule 実行時は空になり random 扱い）
+        env:
+          ARTICLE_TYPE: ${{ inputs.article_type }}
         run: node scripts/autoCreateZennArticleFromTheme.js

@@ -4,10 +4,74 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { ZennAIContentGenerator, buildZennArticleMarkdown, validateZennMarkdown } from "@aa-0921/zenn-auto-core";
-import { pickRandomTheme } from "../config/zennArticleThemes.js";
+import {
+  pickRandomTheme,
+  LISTICLE_TOPICS,
+  LISTICLE_SYSTEM_PROMPT,
+  LISTICLE_PROMPT_TEMPLATE,
+} from "../config/zennArticleThemes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/**
+ * 記事タイプの出現比率
+ * 「〇〇10選」系（リスト記事）が最も伸びた実績があるため主力にし、残りを通常テーマに割り振る
+ */
+const LISTICLE_RATE = 0.7;
+
+const ARTICLE_TYPE_LABELS = {
+  listicle: "〇〇10選（リスト記事）",
+  theme: "技術テーマ（駆け出しエンジニア向け）",
+};
+
+/**
+ * 記事タイプを決める
+ *
+ * 通常は上の比率に従ってランダムに選ぶが、環境変数 ARTICLE_TYPE でタイプを固定できる
+ * （GitHub Actions の手動実行で、狙ったタイプの記事を動作確認するため）
+ */
+function pickArticleType() {
+  const forced = process.env.ARTICLE_TYPE?.trim();
+  if (forced && forced !== "random") {
+    if (!ARTICLE_TYPE_LABELS[forced]) {
+      throw new Error(
+        `ARTICLE_TYPE の値が不正です: ${forced}（指定できるのは random / ${Object.keys(ARTICLE_TYPE_LABELS).join(" / ")}）`
+      );
+    }
+    console.log("[INFO] ARTICLE_TYPE の指定によりタイプを固定します");
+    return forced;
+  }
+
+  return Math.random() < LISTICLE_RATE ? "listicle" : "theme";
+}
+
+/**
+ * リスト記事の項目数が指定個数に足りているか確認し、不足していれば警告ログを出す
+ *
+ * 「10 選」というタイトルなのに項目が数個しかない記事も生成されうるため、
+ * 投稿は止めずに実態をログで追えるようにする。
+ */
+function warnIfListicleItemsMissing(title, body) {
+  // 「10 選」「7選」などから期待個数を取る
+  const expected = Number(title.match(/(\d+)\s*選/)?.[1] ?? 0);
+  if (!expected) {
+    console.log(
+      "[WARN] 項目数チェック: タイトルから個数を判定できません（「〇〇10選」形式になっていない可能性）"
+    );
+    return;
+  }
+
+  // ### 以下の小見出しは数えない。「まとめ」などの締めの見出しは項目に含めない
+  const headings = body.match(/^##[^#].*$/gm) || [];
+  const itemCount = headings.filter((h) => !/まとめ|おわりに|終わりに|最後に/.test(h)).length;
+
+  if (itemCount < expected) {
+    console.log(`[WARN] 項目数チェック: 不足（期待 ${expected} 個 / 実際 ${itemCount} 個）`);
+  } else {
+    console.log(`[OK] 項目数チェック: 期待 ${expected} 個 / 実際 ${itemCount} 個`);
+  }
+}
 
 // 2つ目の見出し直前（または末尾）に挿入する自己紹介・宣伝ブロック
 const ARTICLE_PROMOTION_BLOCK = `
@@ -130,20 +194,42 @@ async function main() {
     console.warn("[WARN] git pull に失敗しましたが処理を継続します:", err.message);
   }
 
-  // 2. テーマから AI で記事生成（駆け出し向けテーマ配列からランダムに 1 件取得）
-  const defaultDetail =
-    "駆け出しエンジニアが理解しやすいよう、具体例ベースで解説してください。";
-  const picked = pickRandomTheme();
-  const theme = picked.theme;
-  const detail = picked.detail ?? defaultDetail;
-  console.log("[INFO] テーマをランダムに選択しました:", theme);
+  // 2. 記事タイプを決めて AI で記事生成（70% がリスト記事、残りが通常の技術テーマ）
+  const articleType = pickArticleType();
+  console.log("[INFO] 記事タイプ:", ARTICLE_TYPE_LABELS[articleType]);
 
-  const generator = new ZennAIContentGenerator({});
-  console.log("[INFO] AI による Zenn 記事生成を開始します...");
-  const { title, body, topics } = await generator.generateArticleForZennFromTheme({
-    theme,
-    detail
-  });
+  let title, body, topics;
+  if (articleType === "listicle") {
+    const topic = pickRandomTheme(LISTICLE_TOPICS);
+    console.log("[INFO] トピックをランダムに選択しました:", topic);
+
+    // リスト記事は 3000〜4500 文字と長いため、既定の 4096 トークンでは途中で打ち切られる
+    const generator = new ZennAIContentGenerator({ maxTokens: 8192 });
+    console.log("[INFO] AI による Zenn 記事生成を開始します...");
+    ({ title, body, topics } = await generator.generateArticleFromPrompt({
+      systemPrompt: LISTICLE_SYSTEM_PROMPT,
+      userMessage: LISTICLE_PROMPT_TEMPLATE.replaceAll("{{topic}}", topic),
+      fallbackTitle: topic
+    }));
+
+    // 「10 選」と書いてあるのに項目が足りないことがあるため、書き込み前に確認する
+    warnIfListicleItemsMissing(title, body);
+  } else {
+    const defaultDetail =
+      "駆け出しエンジニアが理解しやすいよう、具体例ベースで解説してください。";
+    const picked = pickRandomTheme();
+    const theme = picked.theme;
+    const detail = picked.detail ?? defaultDetail;
+    console.log("[INFO] テーマをランダムに選択しました:", theme);
+
+    const generator = new ZennAIContentGenerator({});
+    console.log("[INFO] AI による Zenn 記事生成を開始します...");
+    ({ title, body, topics } = await generator.generateArticleForZennFromTheme({
+      theme,
+      detail
+    }));
+  }
+
   const bodyWithPromotionBlock = insertFooterBeforeSecondHeading(body, ARTICLE_PROMOTION_BLOCK);
 
   const publishedEnv = process.env.ZENN_PUBLISHED;
