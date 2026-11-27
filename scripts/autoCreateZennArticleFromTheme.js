@@ -90,28 +90,6 @@ https://www.youtube.com/@tech-trend-zunda-metan/featured
 プログラミングのマンツーマンレッスンサービス「ハジメル.dev」も運営しています。
 未経験OK・オンライン完結・月額制/違約金なしなので、気軽に無料相談してみてください🙇‍♂️
 
----
-
-https://unityroom.com/games/nyampire_survivors
-
-「ニャンパイアサバイバー」というヴァンパイアサバイバーリスペクトのゲームを作成しました！
-もしよろしければ遊んで頂けると嬉しいです😭
-
----
-
-習い事教室の先生向けに、SNS 投稿・生徒募集・保護者通知の文章を AI で生成する Web サービス「おしらせAI」を個人開発しました。Next.js + Supabase + LLM で構成しており、無料で月 10 回まで試用できます。よければ触ってみてください。
-
-→ おしらせAI: https://oshirase-ai.vercel.app/
-
----
-
-言いたいことがうまく伝わらない…という方向けに、会話の言い方を添削する「伝え方ラボ」を開発中です。
-場面を選んで自分の言葉で返すと、何が伝わっていないかの指摘と、そのまま使える言い換えが返ってきます。
-ChatGPT に相談すると褒めから入って直すべきところが残りがちなので、指摘側に振り切りました。
-現在は公開時にお知らせするメール登録のみ受付中です🙇‍♂️
-
-→ 伝え方ラボ: https://tsutaekata-lab.pages.dev/
-
 ✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨
 `.trim();
 
@@ -204,7 +182,7 @@ async function main() {
     console.log("[INFO] トピックをランダムに選択しました:", topic);
 
     // リスト記事は 3000〜4500 文字と長いため、既定の 4096 トークンでは途中で打ち切られる
-    const generator = new ZennAIContentGenerator({ maxTokens: 8192 });
+    const generator = new ZennAIContentGenerator({ maxTokens: 16384 });
     console.log("[INFO] AI による Zenn 記事生成を開始します...");
     ({ title, body, topics } = await generator.generateArticleFromPrompt({
       systemPrompt: LISTICLE_SYSTEM_PROMPT,
