@@ -127,9 +127,15 @@ function runGitCommand(cwd, command, args) {
 function insertFooterBeforeSecondHeading(body, footer) {
   const lines = body.split("\n");
   let headingCount = 0;
+  // コードブロック内の「# コメント」を見出しと数えないよう、``` / ~~~ の内外を追う
+  let inFence = false;
 
   for (let i = 0; i < lines.length; i += 1) {
-    if (/^#/.test(lines[i])) {
+    if (/^\s*(```|~~~)/.test(lines[i])) {
+      inFence = !inFence;
+      continue;
+    }
+    if (!inFence && /^#/.test(lines[i])) {
       headingCount += 1;
       if (headingCount === 2) {
         const before = lines.slice(0, i).join("\n").trimEnd();
